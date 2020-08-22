@@ -1,0 +1,72 @@
+[BITS 32]
+
+%macro isr_err 2
+global isr%1;
+extern %2;
+isr%1: 
+    cli
+    push dword %1;
+    push ebp;
+    push esi;
+    push edi;
+    push edx; 
+    push ecx;
+    push ebx;
+    push eax;
+  
+    push ax;
+    mov ax, 0x10; 	//Kernel Daten-Segment laden, später variabel halten???
+    mov ds, ax;
+    mov es, ax;
+    mov fs, ax;
+    mov gs, ax;
+    pop ax;
+
+    push esp;	    //Zeiger auf Stack übergeben
+    call %2; 		//Eig Handler aufrufen
+    add esp, 4;   
+    sti;
+    iret;
+%endmacro 
+
+%macro isr 2
+global isr%1;
+extern %2;
+isr%1:
+    cli
+    push %1; 		//Interrupt Nummer
+    push dword 0x00;//Fehler Code/Null
+    push ebp;
+    push esi;
+    push edi;
+    push edx; 
+    push ecx;
+    push ebx;
+    push eax;
+  
+    push ax;
+    mov ax, 0x10; 	//Kernel Daten-Segment laden
+    mov ds, ax;
+    mov es, ax;
+    mov fs, ax;
+    mov gs, ax;
+    pop ax;
+
+    push esp;   	//Zeiger auf Stack übergeben
+    call %2; 		
+    add esp, 4; 	//eig. unnötig, da nie erreicht...
+
+	pop eax;
+	pop ebx;
+	pop ecx;
+	pop edx;
+	pop edi;
+	pop esi;
+	pop ebp;
+	add esp, 8;
+
+    sti;
+    iret;
+%endmacro
+
+
